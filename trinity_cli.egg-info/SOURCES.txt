@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+trinity_cli/__init__.py
+trinity_cli/cli.py
+trinity_cli.egg-info/PKG-INFO
+trinity_cli.egg-info/SOURCES.txt
+trinity_cli.egg-info/dependency_links.txt
+trinity_cli.egg-info/entry_points.txt
+trinity_cli.egg-info/requires.txt
+trinity_cli.egg-info/top_level.txt

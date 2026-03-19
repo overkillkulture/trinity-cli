@@ -1,0 +1,3 @@
+[console_scripts]
+tri = trinity_cli.cli:main
+trinity = trinity_cli.cli:main

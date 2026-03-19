@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trinity-cli"
+version = "1.0.0"
+description = "Trinity AI - Three minds, one convergence. CLI for developers."
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "requests>=2.28.0",
+    "click>=8.0.0",
+    "rich>=13.0.0",
+]
+
+[project.scripts]
+trinity = "trinity_cli.cli:main"
+tri = "trinity_cli.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest", "black"]
