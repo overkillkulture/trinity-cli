@@ -10,7 +10,7 @@ pip install -e .
 
 Or one-liner:
 ```bash
-pip install git+https://github.com/overkor-tek/trinity-cli.git
+pip install git+https://github.com/overkillkulture/trinity-cli.git
 ```
 
 ## Usage
@@ -44,6 +44,37 @@ trinity code Build a FastAPI endpoint for user registration --lang python
 ```bash
 trinity raw Design a microservices architecture for an e-commerce platform
 ```
+
+### Spiral - Recursive Refinement
+```bash
+# Default 3 rounds of refinement
+trinity spiral Design a user authentication system
+
+# 5 rounds with challenge mode (critiques and strengthens)
+trinity spiral Build a REST API --rounds 5 --mode challenge
+
+# Build mode (adds implementation details each round)
+trinity spiral Create a dashboard --mode build --rounds 4
+```
+
+**Modes:**
+- `refine` (default) - Each round improves the previous answer
+- `challenge` - Each round critiques and finds weaknesses
+- `build` - Each round adds implementation details
+
+### Build - Full Autonomous Protocol
+```bash
+# Runs complete /build protocol
+trinity build Create a dashboard for user analytics
+
+# Save output to file
+trinity build Design a payment system --output blueprint.md
+```
+
+Runs three phases:
+1. **Trinity Analysis** - C1+C2+C3 perspectives
+2. **LFSME Scoring** - Manufacturing standards check
+3. **Challenge Gate** - 7-point verification
 
 ## What You Get
 
