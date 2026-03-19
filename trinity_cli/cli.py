@@ -266,5 +266,208 @@ def raw(prompt):
     display_trinity_response(data)
 
 
+@main.command()
+@click.argument('task', nargs=-1, required=True)
+@click.option('--rounds', '-r', default=3, help='Number of refinement rounds (default: 3)')
+@click.option('--mode', '-m', default='refine', type=click.Choice(['refine', 'challenge', 'build']),
+              help='Spiral mode: refine (improve), challenge (critique), build (implement)')
+def spiral(task, rounds, mode):
+    """Recursive Trinity - spiral deeper through multiple rounds.
+
+    Each round feeds the previous convergence back into Trinity for refinement.
+
+    \b
+    Modes:
+      refine    - Each round improves the previous answer
+      challenge - Each round critiques and strengthens
+      build     - Each round adds implementation detail
+
+    \b
+    Example:
+      trinity spiral Design a user auth system --rounds 3
+      trinity spiral Build a REST API --mode build --rounds 4
+    """
+    task_text = " ".join(task)
+
+    # Mode-specific refinement prompts
+    mode_prompts = {
+        'refine': "Improve and refine this solution. Make it more concrete, actionable, and complete:\n\n",
+        'challenge': "Challenge this solution. Find weaknesses, edge cases, and gaps. Then strengthen it:\n\n",
+        'build': "Take this design and add implementation details. Include specific code, file structures, and commands:\n\n"
+    }
+
+    print_output(f"Starting {rounds}-round spiral on: {task_text}", style="bold")
+    print_output(f"Mode: {mode}", style="dim")
+    print_output("="*60, style="dim")
+
+    current_prompt = task_text
+    final_convergence = ""
+
+    for round_num in range(1, rounds + 1):
+        if RICH_AVAILABLE and console:
+            console.print(Panel(
+                f"Round {round_num}/{rounds}",
+                title=f"[bold yellow]SPIRAL ROUND {round_num}[/bold yellow]",
+                border_style="yellow"
+            ))
+        else:
+            print(f"\n{'='*60}")
+            print(f"SPIRAL ROUND {round_num}/{rounds}")
+            print('='*60)
+
+        print_output(f"Converging C1 + C2 + C3...", style="dim italic")
+
+        data = call_trinity(current_prompt)
+
+        if "error" in data:
+            print_output(f"[ERROR] Round {round_num} failed: {data['error']}", style="bold red")
+            break
+
+        convergence = data.get("convergence", "")
+        trinity = data.get("trinity", {})
+
+        # Show condensed output for intermediate rounds
+        if round_num < rounds:
+            if RICH_AVAILABLE and console:
+                # Show just convergence for intermediate rounds
+                console.print(Panel(
+                    convergence[:500] + "..." if len(convergence) > 500 else convergence,
+                    title="[yellow]Convergence (condensed)[/yellow]",
+                    border_style="dim"
+                ))
+            else:
+                print(f"Convergence: {convergence[:300]}...")
+        else:
+            # Full output on final round
+            display_trinity_response(data)
+
+        final_convergence = convergence
+
+        # Prepare next round prompt
+        if round_num < rounds:
+            current_prompt = f"""{mode_prompts[mode]}
+
+PREVIOUS TRINITY CONVERGENCE:
+{convergence}
+
+C1 MECHANIC SAID:
+{trinity.get('c1_mechanic', '')[:500]}
+
+C2 ARCHITECT SAID:
+{trinity.get('c2_architect', '')[:500]}
+
+C3 ORACLE SAID:
+{trinity.get('c3_oracle', '')[:500]}
+
+ORIGINAL TASK: {task_text}
+
+Now provide an improved, deeper analysis."""
+
+    # Final summary
+    if RICH_AVAILABLE and console:
+        console.print()
+        console.print(Panel(
+            f"Completed {rounds} rounds of {mode} spiral.\nOriginal task: {task_text}",
+            title="[bold green]SPIRAL COMPLETE[/bold green]",
+            border_style="green"
+        ))
+    else:
+        print(f"\n{'='*60}")
+        print(f"SPIRAL COMPLETE - {rounds} rounds of {mode}")
+        print(f"Original task: {task_text}")
+        print('='*60)
+
+
+@main.command()
+@click.argument('task', nargs=-1, required=True)
+@click.option('--output', '-o', default=None, help='Save final output to file')
+def build(task, output):
+    """Full autonomous build protocol - Trinity + LFSME + Challenge.
+
+    Runs the complete /build protocol:
+    1. Trinity analysis (3 perspectives)
+    2. LFSME scoring
+    3. Challenge gate
+
+    Example: trinity build Create a dashboard for user analytics
+    """
+    task_text = " ".join(task)
+
+    print_output("AUTONOMOUS BUILD PROTOCOL", style="bold yellow")
+    print_output("="*60, style="dim")
+
+    # Phase 1: Trinity Analysis
+    print_output("\n[PHASE 1] Trinity Analysis...", style="bold cyan")
+    trinity_prompt = f"""Analyze this build task from all three perspectives:
+
+TASK: {task_text}
+
+Provide:
+- C1 MECHANIC: What can we build RIGHT NOW? Bill of materials, time estimate.
+- C2 ARCHITECT: What should scale? Architecture, dependencies.
+- C3 ORACLE: What must emerge? Pattern alignment, user impact."""
+
+    data = call_trinity(trinity_prompt)
+    if "error" in data:
+        print_output(f"Trinity analysis failed: {data['error']}", style="red")
+        return
+    display_trinity_response(data)
+    trinity_convergence = data.get("convergence", "")
+
+    # Phase 2: LFSME Scoring
+    print_output("\n[PHASE 2] LFSME Scoring...", style="bold cyan")
+    lfsme_prompt = f"""Score this design against LFSME manufacturing standards (1-10 each):
+
+DESIGN:
+{trinity_convergence}
+
+Score each:
+- L (Lighter): Can we remove anything without losing function?
+- F (Faster): Zero friction from input to output?
+- S (Stronger): Survives 1000 users? 10,000?
+- M (More Elegant): One solution solves many problems?
+- E (Less Expensive): Resource-efficient?
+
+Provide specific scores and justification. Average must be >= 6 to proceed."""
+
+    lfsme_data = call_trinity(lfsme_prompt)
+    if "error" not in lfsme_data:
+        display_trinity_response(lfsme_data)
+
+    # Phase 3: Challenge Gate
+    print_output("\n[PHASE 3] Challenge Gate...", style="bold cyan")
+    challenge_prompt = f"""Challenge this build plan. Run 7-point verification:
+
+PLAN:
+{trinity_convergence}
+
+Check each:
+1. EVIDENCE - Any unverified claims?
+2. ASSUMPTIONS - All assumptions documented?
+3. SCALABILITY - Any single-user-only patterns?
+4. SECURITY - Exposed credentials, XSS, injection risks?
+5. USER REALITY - Key action findable in <10 seconds?
+6. DEPENDENCIES - Fallback for every external dependency?
+7. RECURSION - Is the plan complete and accurate?
+
+Verdict: 0 holes = ship, 1-3 holes = fix, 4+ holes = back to Trinity."""
+
+    challenge_data = call_trinity(challenge_prompt)
+    if "error" not in challenge_data:
+        display_trinity_response(challenge_data)
+
+    # Save output if requested
+    if output:
+        with open(output, 'w', encoding='utf-8') as f:
+            f.write(f"# Build Protocol Output\n\n")
+            f.write(f"## Task: {task_text}\n\n")
+            f.write(f"## Trinity Convergence\n{trinity_convergence}\n\n")
+            f.write(f"## LFSME Analysis\n{lfsme_data.get('convergence', '')}\n\n")
+            f.write(f"## Challenge Gate\n{challenge_data.get('convergence', '')}\n")
+        print_output(f"\nOutput saved to: {output}", style="green")
+
+    print_output("\n[BUILD PROTOCOL COMPLETE]", style="bold green")
+
+
 if __name__ == "__main__":
     main()
